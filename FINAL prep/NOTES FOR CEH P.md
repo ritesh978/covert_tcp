@@ -1,6 +1,7 @@
 ====================NOTES FOR CEH PRACTICAL EXAM======================
 
 https://chatgpt.com/c/69cd0b62-5134-8320-a165-3d744793ca6f
+https://github.com/rebootuser/LinEnum
 
 also check it has share folder on it (CEH-Tools(\\WINDOWS11)(Z:)
 
