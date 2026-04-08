@@ -4,6 +4,7 @@ https://chatgpt.com/c/69cd0b62-5134-8320-a165-3d744793ca6f
 
 
 https://github.com/rebootuser/LinEnum (1:-chmod +x LinEnum.sh         2:- ./LinEnum.sh -t -r results.txt -e /tmp/)
+https://github.com/peass-ng/PEASS-ng.git (1:-chmod +x linpeas.sh , 2:- ./linpeas.sh -a > /tmp/linpeas_report.txt)
 
 also check it has share folder on it (CEH-Tools(\\WINDOWS11)(Z:)
 
