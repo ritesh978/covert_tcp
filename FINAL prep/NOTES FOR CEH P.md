@@ -3,7 +3,7 @@
 https://chatgpt.com/c/69cd0b62-5134-8320-a165-3d744793ca6f
 
 
-https://github.com/rebootuser/LinEnum
+https://github.com/rebootuser/LinEnum (1:-chmod +x LinEnum.sh         2:- ./LinEnum.sh -t -r results.txt -e /tmp/)
 
 also check it has share folder on it (CEH-Tools(\\WINDOWS11)(Z:)
 
